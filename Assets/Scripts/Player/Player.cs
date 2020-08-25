@@ -5,23 +5,60 @@ using UnityEngine;
 [RequireComponent(typeof(BallMotor))]
 public class Player : MonoBehaviour
 {
+    private Vector3 startPosition;
+
     [SerializeField] int _maxHealth = 3;
     int _currentHealth;
+    public int CurrentHealth
+    {
+        get => _currentHealth;
+        set
+        {
+            _currentHealth = value;
+            if (_currentHealth <= 0) Kill();
+            else if (_currentHealth > _maxHealth) _currentHealth = _maxHealth;
+
+            _healthText.text = "HP: " + _currentHealth;
+        }
+    }
+
+    [SerializeField] int _treasure = 0;
+    public int Treasure
+    {
+        get => _treasure;
+        set
+        {
+            _treasure = value;
+            _treasureText.text = "Treasure: " + _treasure;
+        }
+    }
+
+    [SerializeField] private bool _invincible = false;
+    public bool Invincible
+    {
+        get => _invincible;
+        set => _invincible = value;
+    }
 
     BallMotor _ballMotor;
+    Rigidbody _rb;
+
+    [SerializeField] UnityEngine.UI.Text _healthText;
+    [SerializeField] UnityEngine.UI.Text _treasureText;
 
     private void Awake()
     {
-        _ballMotor = GetComponent<BallMotor>();
-    }
+        startPosition = transform.position;
 
-    private void Start()
-    {
-        _currentHealth = _maxHealth;
+        _ballMotor = GetComponent<BallMotor>();
+        _rb = GetComponent<Rigidbody>();
+        CurrentHealth = _maxHealth;
+        Treasure = 0;
     }
 
     private void FixedUpdate()
     {
+        if (Input.GetKeyDown(KeyCode.Escape)) Application.Quit();
         ProcessMovement();  
     }
 
@@ -36,17 +73,36 @@ public class Player : MonoBehaviour
         _ballMotor.Move(movement);
     }
 
-    public void IncreaseHealth(int amount) { ChangeHealth(amount); }
-    public void DecreaseHealth(int amount) { ChangeHealth(-amount); }
-    public void ChangeHealth(int amount)
-    {
-        _currentHealth += amount;
-        if (_currentHealth <= 0) Kill();
-        else if (_currentHealth > _maxHealth) _currentHealth = _maxHealth;
-    }
+    public void IncreaseHealth(int amount) { CurrentHealth += amount; }
+    public void DecreaseHealth(int amount) { if(!_invincible) CurrentHealth -= amount; }
 
     public void Kill()
     {
-        gameObject.SetActive(false);
+        GetComponent<Renderer>().enabled = false;
+        GetComponent<Collider>().enabled = false;
+        _rb.isKinematic = true;
+
+        Treasure = 0;
+
+        StartCoroutine("WaitToRespawn");
+    }
+
+    IEnumerator WaitToRespawn()
+    {
+        yield return new WaitForSeconds(1f);
+        Respawn();
+    }
+
+    public void Respawn()
+    {
+        GetComponent<Renderer>().enabled = true;
+        GetComponent<Collider>().enabled = true;
+        _rb.isKinematic = false;
+
+        CurrentHealth = _maxHealth;
+
+        transform.position = startPosition;
+        _rb.velocity = Vector3.zero;
+        _rb.angularVelocity = Vector3.zero;
     }
 }

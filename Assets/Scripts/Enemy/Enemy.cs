@@ -44,7 +44,12 @@ public class Enemy : MonoBehaviour
 
     public void ImpactFeedback()
     {
-        if (_impactParticles != null) Instantiate(_impactParticles, transform.position, Quaternion.identity);
+        if (_impactParticles != null)
+        {
+            ParticleSystem particles = Instantiate(_impactParticles, transform.position, Quaternion.identity);
+            var particlesMain = particles.main;
+            particlesMain.startColor = GetComponent<Renderer>().material.color;
+        }
         if (_impactSound != null) AudioHelper.PlayClip2D(_impactSound, 1f);
     }
 }

@@ -11,12 +11,19 @@ public class BallMotor : MonoBehaviour {
         get => _maxSpeed;
         set => _maxSpeed = value;
     }
+
+    float _baseSpeed;
+    public float BaseSpeed
+    {
+        get => _baseSpeed;
+    }
     
     Rigidbody _rb;
 
     private void Start()
     {
         _rb = GetComponent<Rigidbody>();
+        _baseSpeed = _maxSpeed;
     }
 
     public void Move(Vector3 movement)
